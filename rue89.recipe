@@ -47,11 +47,15 @@ class Rue89(BasicNewsRecipe):
 
     conversion_options = { 'smarten_punctuation' : True }
 
-    def preprocess_html(self,soup):
-        body = Tag(soup, 'body')
-        title = soup.find('h1', {'class':'title'})
-        content = soup.find('div', {'class':'content'})
-        soup.body.replaceWith(body)
-        body.insert(0, title)
-        body.insert(1, content)
-        return soup
+    keep_only_tags = [
+        dict(name='div', attrs={'id':'article'}),
+    ]
+
+    remove_tags_after = [
+        dict(name='div', attrs={'id':'plus_loin'}),
+    ]
+
+    remove_tags = [
+        dict(name='div', attrs={'id':'article_tools'}),
+        dict(name='div', attrs={'id':'plus_loin'}),
+    ]
