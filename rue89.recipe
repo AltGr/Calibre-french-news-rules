@@ -4,13 +4,15 @@ __copyright__ = '2010, Louis Gesbert <meta at antislash dot info>'
 Rue89
 '''
 
-import re, string
-from calibre.ebooks.BeautifulSoup import BeautifulSoup, Tag
+__author__ = '2010, Louis Gesbert <meta at antislash dot info>'
+
+import re
+from calibre.ebooks.BeautifulSoup import Tag
 from calibre.web.feeds.news import BasicNewsRecipe
 
 class Rue89(BasicNewsRecipe):
     title = 'Rue89'
-    __author__ = '2010, Louis Gesbert <meta at antislash dot info>'
+    __author__ = 'Louis Gesbert'
     description = 'Popular free french news website'
     title = u'Rue89'
     language = 'fr'
