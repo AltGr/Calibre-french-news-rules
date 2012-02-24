@@ -36,15 +36,7 @@ class Rue89(BasicNewsRecipe):
 
     no_stylesheets = True
 
-    preprocess_regexps = [
-        (re.compile(r'<(/?)h2>', re.IGNORECASE|re.DOTALL),
-         lambda match : '<'+match.group(1)+'h3>'),
-        (re.compile(r'<div class="print-title">([^>]+)</div>', re.IGNORECASE|re.DOTALL),
-         lambda match : '<h2>'+match.group(1)+'</h2>'),
-        (re.compile(r'<img[^>]+src="[^"]*/numeros/(\d+)[^0-9.">]*.gif"[^>]*/>', re.IGNORECASE|re.DOTALL),
-         lambda match : '<span style="font-family: Sans-serif; color: red; font-size:24pt; padding=2pt;">'+match.group(1)+'</span>'),
-        (re.compile(r'\''), lambda match: '&rsquo;'),
-        ]
+    conversion_options = { 'smarten_punctuation' : True }
 
     def preprocess_html(self,soup):
         body = Tag(soup, 'body')
@@ -54,13 +46,3 @@ class Rue89(BasicNewsRecipe):
         body.insert(0, title)
         body.insert(1, content)
         return soup
-
-    remove_tags = [ #dict(name='div', attrs={'class':'print-source_url'}),
-                    #dict(name='div', attrs={'class':'print-links'}),
-                    #dict(name='img', attrs={'class':'print-logo'}),
-                    dict(name='div', attrs={'class':'content_top'}),
-                    dict(name='div', attrs={'id':'sidebar-left'}), ]
-
-# -- print-version has poor quality on this website, better do the conversion ourselves
-#    def print_version(self, url):
-#        return re.sub('^.*-([0-9]+)$', 'http://www.rue89.com/print/\\1',url)

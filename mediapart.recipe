@@ -29,14 +29,9 @@ class Mediapart(BasicNewsRecipe):
 
 # -- print-version
 
-    preprocess_regexps = [ (re.compile(i[0], re.IGNORECASE|re.DOTALL), i[1]) for i in
-        [
-            (r'<div class="print-title">([^>]+)</div>', lambda match : '<h2>'+match.group(1)+'</h2>'),
-            (r'\'', lambda match: '&rsquo;')
-        ]
-    ]
+    conversion_options = { 'smarten_punctuation' : True }
 
-    remove_tags    = [ dict(name='div', attrs={'class':'print-source_url'}) ]
+    remove_tags = [ dict(name='div', attrs={'class':'print-source_url'}) ]
 
     def print_version(self, url):
         raw = self.browser.open(url).read()
