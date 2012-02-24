@@ -19,6 +19,8 @@ class Rue89(BasicNewsRecipe):
     oldest_article = 7
     max_articles_per_feed = 12
 
+    use_embedded_content = False
+
     # From http://www.rue89.com/les-flux-rss-de-rue89
     feeds = [
         (u'La Une',    u'http://www.rue89.com/feed'),
@@ -33,6 +35,13 @@ class Rue89(BasicNewsRecipe):
         (u'Politique', u'http://www.rue89.com/politique/feed'),
         (u'Societe',   u'http://www.rue89.com/societe/feed'),
     ]
+
+    # Follow redirection from feedsportal.com
+    def get_article_url(self,article):
+        return self.browser.open_novisit(article.link).geturl()
+
+    def print_version(self, url):
+        return url + '?imprimer=1'
 
     no_stylesheets = True
 
