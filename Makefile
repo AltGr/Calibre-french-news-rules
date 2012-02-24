@@ -11,6 +11,9 @@
 	ebook-convert $< tests/$* --test -vvvv --debug-pipeline tests/$*/debug $(ARGS_$*)
 	if [ -f tests/$*/index.html ]; then firefox tests/$*/index.html; fi
 
+%.mobi: %.recipe
+	ebook-convert $< $@ -v $(ARGS_$*)
+
 .PHONY: clean
 clean:
 	rm -rf tests/*
