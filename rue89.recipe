@@ -17,9 +17,22 @@ class Rue89(BasicNewsRecipe):
     title = u'Rue89'
     language = 'fr'
     oldest_article = 7
-    max_articles_per_feed = 50
+    max_articles_per_feed = 12
 
-    feeds = [(u'La Une', u'http://www.rue89.com/homepage/feed')]
+    # From http://www.rue89.com/les-flux-rss-de-rue89
+    feeds = [
+        (u'La Une',    u'http://www.rue89.com/feed'),
+        (u'Rue69',     u'http://www.rue89.com/rue69/feed'),
+        (u'Eco',       u'http://www.rue89.com/rue89-eco/feed'),
+        (u'Planète',   u'http://www.rue89.com/rue89-planete/feed'),
+        (u'Sport',     u'http://www.rue89.com/rue89-sport/feed'),
+        (u'Culture',   u'http://www.rue89.com/culture/feed'),
+        (u'Hi-tech',   u'http://www.rue89.com/hi-tech/feed'),
+        (u'Media',     u'http://www.rue89.com/medias/feed'),
+        (u'Monde',     u'http://www.rue89.com/monde/feed'),
+        (u'Politique', u'http://www.rue89.com/politique/feed'),
+        (u'Societe',   u'http://www.rue89.com/societe/feed'),
+    ]
 
     no_stylesheets = True
 
