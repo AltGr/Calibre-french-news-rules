@@ -43,8 +43,6 @@ class Rue89(BasicNewsRecipe):
     def print_version(self, url):
         return url + '?imprimer=1'
 
-    no_stylesheets = True
-
     conversion_options = { 'smarten_punctuation' : True }
 
     keep_only_tags = [
