@@ -46,7 +46,7 @@ class Rue89(BasicNewsRecipe):
     conversion_options = { 'smarten_punctuation' : True }
 
     keep_only_tags = [
-        dict(name='div', attrs={'id':'article'}),
+        dict(name='div', attrs={'id':'content'}),
     ]
 
     remove_tags_after = [
@@ -57,3 +57,14 @@ class Rue89(BasicNewsRecipe):
         dict(name='div', attrs={'id':'article_tools'}),
         dict(name='div', attrs={'id':'plus_loin'}),
     ]
+
+    # Without this, parsing of video articles returns strange results
+    preprocess_regexps = [
+        (re.compile(r'<script.*?</script>', re.IGNORECASE|re.DOTALL), ''),
+    ]
+
+    def preprocess_html(self, soup):
+        # Remove whole article if it's a "zapnet" (video)
+        if soup.find('h1', {'class':'zapnet_title'}):
+            return None
+        return soup
