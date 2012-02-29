@@ -62,6 +62,8 @@ class Rue89(BasicNewsRecipe):
         dict(name='div', attrs={'class':'tools'}),
     ]
 
+    extra_css = 'div, p { margin-left: 0; }'
+
     # Without this, parsing of video articles returns strange results
     preprocess_regexps = [
         (re.compile(r'<script.*?</script>', re.IGNORECASE|re.DOTALL), ''),
@@ -71,4 +73,7 @@ class Rue89(BasicNewsRecipe):
         # Remove whole article if it's a "zapnet" (video)
         if soup.find('h1', {'class':'zapnet_title'}):
             return None
+        # Reduce h2 titles to h3
+        for title in soup.findAll('h2'):
+            title.name = 'h3'
         return soup
