@@ -59,5 +59,5 @@ class Mediapart(BasicNewsRecipe):
             title.name = 'h3'
         for legend in soup.findAll('span', {'class':'legend'}):
             legend.insert(0, Tag(soup, 'br', []))
-            legend.name = 'small'
+            legend.name = 'em'
         return soup
