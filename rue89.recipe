@@ -52,11 +52,14 @@ class Rue89(BasicNewsRecipe):
 
     remove_tags_after = [
         dict(name='div', attrs={'id':'plus_loin'}),
+        dict(name='div', attrs={'class':'stats'}),
     ]
 
     remove_tags = [
         dict(name='div', attrs={'id':'article_tools'}),
         dict(name='div', attrs={'id':'plus_loin'}),
+        dict(name='div', attrs={'class':'stats'}),
+        dict(name='div', attrs={'class':'tools'}),
     ]
 
     # Without this, parsing of video articles returns strange results
