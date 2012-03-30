@@ -62,7 +62,7 @@ class Rue89(BasicNewsRecipe):
         dict(name='div', attrs={'class':'tools'}),
     ]
 
-    extra_css = 'div, p { margin-left: 0; }'
+    extra_css = "#content { padding: 0 0; }"
 
     # Without this, parsing of video articles returns strange results
     preprocess_regexps = [
