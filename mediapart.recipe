@@ -54,6 +54,17 @@ class Mediapart(BasicNewsRecipe):
             br.submit()
         return br
 
+    # This is a workaround articles with scribd content that include
+    # <body></body> tags _within_ the body
+    preprocess_regexps = [
+        (re.compile(r'(<body.*?>)(.*)</body>', re.IGNORECASE|re.DOTALL),
+         lambda match:
+             match.group(1)
+             + re.sub(re.compile(r'</?body>', re.IGNORECASE|re.DOTALL),'',
+                      match.group(2))
+             + '</body>')
+    ]
+
     def preprocess_html(self, soup):
         for title in soup.findAll('p', {'class':'titre_page'}):
             title.name = 'h3'
