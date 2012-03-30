@@ -11,10 +11,9 @@ from calibre.ebooks.BeautifulSoup import Tag
 from calibre.web.feeds.news import BasicNewsRecipe
 
 class Rue89(BasicNewsRecipe):
-    title = 'Rue89'
+    title = u'Rue89'
     __author__ = 'Louis Gesbert'
     description = 'Popular free french news website'
-    title = u'Rue89'
     language = 'fr'
     oldest_article = 7
     max_articles_per_feed = 50
@@ -50,17 +49,20 @@ class Rue89(BasicNewsRecipe):
         dict(name='div', attrs={'id':'content'}),
     ]
 
-    remove_tags_after = [
+    remove_and_after = [
         dict(name='div', attrs={'id':'plus_loin'}),
-        dict(name='div', attrs={'class':'stats'}),
     ]
+
+    remove_tags_after = [
+        dict(name='div', attrs={'class':re.compile(r'content')}),
+        dict(name='footer'),
+    ] + remove_and_after
 
     remove_tags = [
         dict(name='div', attrs={'id':'article_tools'}),
-        dict(name='div', attrs={'id':'plus_loin'}),
-        dict(name='div', attrs={'class':'stats'}),
-        dict(name='div', attrs={'class':'tools'}),
-    ]
+        dict(name='div', attrs={'class':re.compile(r'tools')}),
+        dict(attrs={'class':re.compile(r'stats|sharing|share|twitter')}),
+    ] + remove_and_after
 
     extra_css = "#content { padding: 0 0; }"
 
