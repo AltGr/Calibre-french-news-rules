@@ -1,0 +1,44 @@
+__license__   = 'GPL v3'
+__copyright__ = '2012, Louis Gesbert <meta at antislash dot info>'
+'''
+Rue89
+'''
+
+__author__ = '2012, Louis Gesbert <meta at antislash dot info>'
+
+import re
+from calibre.ebooks.BeautifulSoup import Tag
+from calibre.web.feeds.news import BasicNewsRecipe
+
+class Lequipe(BasicNewsRecipe):
+    title = u'L’Équipe'
+    __author__ = 'Louis Gesbert'
+    description = 'Popular french sport newspaper'
+    language = 'fr'
+    oldest_article = 1
+    max_articles_per_feed = 80
+
+    use_embedded_content = False
+
+    # From http://www.lequipe.fr/rss/
+    feeds = [
+        (u'Tous les sports',    u'http://www.lequipe.fr/rss/actu_rss.xml'),
+    ]
+
+    # Follow redirection from feedsportal.com
+    def get_article_url(self,article):
+        return article.link.rpartition('url=')[2]
+
+    conversion_options = { 'smarten_punctuation' : True }
+
+    keep_only_tags = [
+        dict(name='article'),
+    ]
+
+    remove_div_ids = ['tools','partage','bloc_bas_breve','ensavoirplus']
+
+    remove_tags = [
+        dict(name='div', attrs={'id':remove_div_ids}),
+        dict(name='div', attrs={'class':'ads'}),
+        dict(name='span', attrs={'class':'encadre'}),
+    ]
