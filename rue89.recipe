@@ -68,9 +68,10 @@ class Rue89(BasicNewsRecipe):
 
     extra_css = "#content { padding: 0 0; }"
 
-    # Without this, parsing of video articles returns strange results
     preprocess_regexps = [
+        # Without this, parsing of video articles returns strange results
         (re.compile(r'<script.*?</script>', re.IGNORECASE|re.DOTALL), ''),
+        (re.compile(r'</?font.*?>', re.IGNORECASE|re.DOTALL), ''),
     ]
 
     def preprocess_html(self, soup):
