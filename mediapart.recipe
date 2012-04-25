@@ -1,3 +1,5 @@
+# -*- mode:python -*-
+
 __license__   = 'GPL v3'
 __copyright__ = '2009, Mathieu Godlewski <mathieu at godlewski.fr>; 2010-2012, Louis Gesbert <meta at antislash dot info>'
 '''
@@ -9,24 +11,75 @@ __author__ = '2009, Mathieu Godlewski <mathieu at godlewski.fr>; 2010-2012, Loui
 import re
 from calibre.ebooks.BeautifulSoup import BeautifulSoup, Tag
 from calibre.web.feeds.news import BasicNewsRecipe
+from datetime import datetime,date,timedelta
 
 class Mediapart(BasicNewsRecipe):
-    title          = 'Mediapart'
+    title = 'Mediapart'
     __author__ = 'Mathieu Godlewski, Louis Gesbert'
     description = 'Global news in french from news site Mediapart'
-    oldest_article = 7
+    publication_type = 'newspaper'
     language = 'fr'
     needs_subscription = True
-    max_articles_per_feed = 50
+    oldest_article = 1
+    remove_empty_feeds = True
 
     use_embedded_content = False
     no_stylesheets = True
 
-    cover_url = 'http://static.mediapart.fr/files/pave_mediapart.jpg'
+    cover_url = 'http://static.mediapart.fr/files/M%20Philips/logo-mediapart.png'
 
-    feeds =  [
-        ('Les articles', 'http://www.mediapart.fr/articles/feed'),
-    ]
+# -- get the index (the feed at 'http://www.mediapart.fr/articles/feed' only has
+#    the 10 last elements :/)
+
+    def parse_index(self):
+
+        soup = self.index_to_soup('https://mediapart.fr')
+
+        la_une = []
+
+        for article in soup('div', {'class':re.compile(r'\bnode-article\b')}):
+
+            title = article.find('h3')
+            for s in title('span'): s.replaceWith(s.renderContents() + "\n")
+
+            url = title.find('a', href=True)['href']
+
+            authors = article.find(['div','span'],{'class':re.compile(r'\bauthor\b')})
+            authors = [ self.tag_to_string(a)
+                        for a in authors('a') ]
+
+            description = article.find('div','content').findAll('p')
+
+            # This is not the real date, probably when the journalist _started_ writing
+            # the article. We get the real date later on (used for filtering)
+            datem = re.search(r'/(\d\d)(\d\d)(\d\d)/', url)
+            article_date = date(year = 2000 + int(datem.group(3)),
+                                month = int(datem.group(2)),
+                                day = int(datem.group(1)))
+
+            description_text = '<em>' + ', '.join(authors) + '</em> &mdash; '
+            description_text += '\n'.join([self.tag_to_string(d) for d in description])
+
+            la_une.append({
+                'title': self.tag_to_string(title).strip(),
+                'author': ', '.join(authors),
+                'url': url,
+                'date': u'' + article_date.strftime("%A %d %b %Y"),
+                'description': description_text,
+            })
+
+
+        # fil = []
+
+        # for article in soup.find("div",{"id":"fil-journal"}).findAll("div","article"):
+        #     title = article.find("h3")
+        #     url = title.find('a', href=True)['href']
+        #     {
+
+        #     }
+        #     for article in
+        # ]
+        return [('La Une', la_une)] #, ('Le Fil', fil)]
 
 # -- print-version
 
@@ -34,13 +87,32 @@ class Mediapart(BasicNewsRecipe):
 
     remove_tags = [ dict(name='div', attrs={'class':'print-source_url'}) ]
 
+    # non-locale specific date parse (strptime("%d %b %Y",s) would work with french locale)
+    def parse_french_date(self, date_str):
+        date_arr = date_str.lower().split()
+        return date(day=int(date_arr[0]),
+                    year=int(date_arr[2]),
+                    month=
+                      [None, 'janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
+                       'août', 'septembre', 'octobre', 'novembre', 'décembre'].index(date_arr[1]))
+
     def print_version(self, url):
         raw = self.browser.open(url).read()
         soup = BeautifulSoup(raw.decode('utf8', 'replace'))
+
+        # Filter old articles
+        article_date = self.parse_french_date(self.tag_to_string(soup.find('span', 'article-date')))
+
+        oldest_article_date = date.today() - timedelta(days=self.oldest_article)
+
+        if article_date < oldest_article_date:
+            return None
+
         link = soup.find('a', {'title':'Imprimer'})
         if link is None:
             return None
         return link['href']
+
 
 # -- Handle login
 
