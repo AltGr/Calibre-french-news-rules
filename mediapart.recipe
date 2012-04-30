@@ -79,36 +79,37 @@ class Mediapart(BasicNewsRecipe):
         soup = soup.find("div",{"id":"content_home_rubrique"})
 
         for article in soup.findAll("div", {'class':re.compile(r'\bnode-article\b')}):
+            try:
+                article_type = article.find("div", "article_type").renderContents()
 
-            article_type = article.find("div", "article_type").renderContents()
+                title = article.find("h3")
 
-            title = article.find("h3")
+                url = title.find('a', href=True)['href']
 
-            url = title.find('a', href=True)['href']
+                if not all(a.get('url') != url for a in la_une): continue
 
-            if not all(a.get('url') != url for a in la_une): continue
+                article_date = self.parse_french_date(article.find("span", "article-date").renderContents())
 
-            article_date = self.parse_french_date(article.find("span", "article-date").renderContents())
+                if article_date < self.oldest_article_date: continue
 
-            if article_date < self.oldest_article_date: continue
+                authors = article.find(['div','span'],{'class':re.compile(r'\bauthor\b')})
+                authors = [ self.tag_to_string(a) for a in authors('a') ]
 
-            authors = article.find(['div','span'],{'class':re.compile(r'\bauthor\b')})
-            authors = [ self.tag_to_string(a) for a in authors('a') ]
+                description = article.find('div','content').findAll('p')
 
-            description = article.find('div','content').findAll('p')
-
-            summary = {
-                'title': self.tag_to_string(title).strip(),
-                'author': ', '.join(authors),
-                'url': url,
-                'date': u'' + article_date.strftime("%A %d %b %Y"),
-                'description': '\n'.join([self.tag_to_string(d) for d in description]),
-            }
-            {
-                "Brève": breves,
-                "Lien": liens,
-                "Confidentiel": confidentiels,
-            }.get(article_type).append(summary)
+                summary = {
+                    'title': self.tag_to_string(title).strip(),
+                    'author': ', '.join(authors),
+                    'url': url,
+                    'date': u'' + article_date.strftime("%A %d %b %Y"),
+                    'description': '\n'.join([self.tag_to_string(d) for d in description]),
+                }
+                {
+                    "Brève": breves,
+                    "Lien": liens,
+                    "Confidentiel": confidentiels,
+                }.get(article_type).append(summary)
+            except: pass
 
         res = []
         res += [('La Une', la_une)] if la_une else []
