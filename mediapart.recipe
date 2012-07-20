@@ -76,7 +76,7 @@ class Mediapart(BasicNewsRecipe):
         confidentiels = []
 
         soup = self.index_to_soup('https://www.mediapart.fr/journal/fil-dactualites')
-        soup = soup.find("div",{"id":"page"})
+        soup = soup.find("div", {'class':re.compile(r'\bpage\b')})
 
         for article in soup.findAll("div", {'class':re.compile(r'\bnode-article\b')}):
             try:
