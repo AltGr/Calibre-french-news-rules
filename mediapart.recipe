@@ -80,7 +80,7 @@ class Mediapart(BasicNewsRecipe):
 
         for article in soup.findAll("div", {'class':re.compile(r'\bnode-article\b')}):
             try:
-                article_type = article.find("div", "article_type").renderContents()
+                article_type = article.find("div", "article-type").renderContents()
 
                 title = article.find("h3")
 
