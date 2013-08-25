@@ -21,7 +21,9 @@ class Mediapart(BasicNewsRecipe):
     publication_type = 'newspaper'
     language = 'fr'
     needs_subscription = True
-    oldest_article = 2
+
+    # date in the feed is unreliable, we filter afterwards
+    oldest_article = 100.0
 
     use_embedded_content = False
     no_stylesheets = True
@@ -30,10 +32,8 @@ class Mediapart(BasicNewsRecipe):
 
 # --
 
-    oldest_article_date = date.today() - timedelta(days=oldest_article)
-
-# -- get the index (the feed at 'http://www.mediapart.fr/articles/feed' only has
-#    the 10 last elements :/)
+    custom_oldest_article = 2.0
+    oldest_article_date = date.today() - timedelta(days=custom_oldest_article)
 
     feeds =  [
         ('La Une', 'http://www.mediapart.fr/articles/feed'),
@@ -47,62 +47,61 @@ class Mediapart(BasicNewsRecipe):
     def my_parse_index(self, la_une):
         articles = []
 
-        breves = []
-        liens = []
-        confidentiels = []
+        fils = {
+            "Brève": [],
+            "Lien": [],
+            "Confidentiel": [],
+            }
+        # Ignoring "Live" and "Document", they won't work well in the ebook
 
-        soup = self.index_to_soup('https://www.mediapart.fr/journal/fil-dactualites')
-        page = soup.find('div', {'id':'pageFirstContent'})
-        fils = page.find('div', {'class':re.compile(r'\bcontent-journal\b')})
+        def read_fil_index(url):
+            soup = self.index_to_soup(url)
+            page = soup.find('div', {'id':'pageFirstContent'})
+            divs = page.find('div', {'class':re.compile(r'\bcontent-journal\b')})
 
-        for article in fils.findAll('div'):
-            try:
-                title = article.find('h2',recursive=False)
-                if title == None or title['class'] == 'title-specific': continue
+            for article in divs.findAll('div'):
+                try:
+                    title = article.find('h2',recursive=False)
+                    if title == None or title['class'] == 'title-specific': continue
 
-                print "found fil ",title
-                article_type = article.find('a', {'href': re.compile(r'.*\/type-darticles\/.*')}).renderContents()
-                print "kind: ",article_type
+                    print "found fil ",title
+                    article_type = article.find('a', {'href': re.compile(r'.*\/type-darticles\/.*')}).renderContents()
+                    if article_type not in fils: print "Ignoring kind ", article_type; continue
 
-                for s in title('span'): s.replaceWith(s.renderContents() + "\n")
-                url = title.find('a', href=True)['href']
+                    print "kind: ",article_type
 
-                article_date = self.parse_french_date(article.find("span", "article-date").renderContents())
+                    for s in title('span'): s.replaceWith(s.renderContents() + "\n")
+                    url = title.find('a', href=True)['href']
 
-                if article_date < self.oldest_article_date:
-                    print "too old"
-                    continue
+                    article_date = self.parse_french_date(article.find("span", "article-date").renderContents())
 
-                authors = article.findAll('a',{'class':re.compile(r'\bjournalist\b')})
-                authors = [ self.tag_to_string(a) for a in authors ]
+                    if article_date < self.oldest_article_date:
+                        print "too old"; continue
 
-                description = article.find('div', {'class': lambda c: c != 'taxonomy-teaser'}, recursive=False).findAll('p')
+                    authors = article.findAll('a',{'class':re.compile(r'\bjournalist\b')})
+                    authors = [ self.tag_to_string(a) for a in authors ]
 
-                print "fil ",title," by ",authors," : ",description
+                    description = article.find('div', {'class': lambda c: c != 'taxonomy-teaser'}, recursive=False).findAll('p')
 
-                summary = {
-                    'title': self.tag_to_string(title).strip(),
-                    'author': ', '.join(authors),
-                    'url': url,
-                    'date': u'' + article_date.strftime("%A %d %b %Y"),
-                    'description': '\n'.join([self.tag_to_string(d) for d in description]),
-                }
-                {
-                    "Brève": breves,
-                    "Lien": liens,
-                    "Confidentiel": confidentiels,
-                }.get(article_type).append(summary)
-            except: pass
+                    print "fil ",title," by ",authors," : ",description
 
-        # print 'La Une: ', len(la_une), ' articles'
-        # for a in la_une: print a["title"]
-        print 'Brèves: ', len(breves), ' articles'
-        print 'Revue web: ', len(liens), ' articles'
-        print 'Confidentiel: ', len(confidentiels), ' articles'
+                    summary = {
+                        'title': self.tag_to_string(title).strip(),
+                        'author': ', '.join(authors),
+                        'url': url,
+                        'date': u'' + article_date.strftime("%A %d %b %Y"),
+                        'description': '\n'.join([self.tag_to_string(d) for d in description]),
+                        }
+                    fils[article_type].append(summary)
+                except: pass
 
-        articles += [('Brèves', breves)] if breves else []
-        articles += [('Revue du Web', liens)] if liens else []
-        articles += [('Confidentiel', confidentiels)] if confidentiels else []
+        pages = 3
+        for page in xrange(0, pages-1):
+            read_fil_index('https://www.mediapart.fr/journal/fil-dactualites?page=%d' % page)
+
+        for (name,contents) in fils.iteritems():
+            if contents: articles += [(name+'s', contents)]
+
         return articles
 
 # -- print-version
