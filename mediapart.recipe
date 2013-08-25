@@ -64,26 +64,20 @@ class Mediapart(BasicNewsRecipe):
                     title = article.find('h2',recursive=False)
                     if title == None or title['class'] == 'title-specific': continue
 
-                    print "found fil ",title
                     article_type = article.find('a', {'href': re.compile(r'.*\/type-darticles\/.*')}).renderContents()
-                    if article_type not in fils: print "Ignoring kind ", article_type; continue
-
-                    print "kind: ",article_type
+                    if article_type not in fils: continue
 
                     for s in title('span'): s.replaceWith(s.renderContents() + "\n")
                     url = title.find('a', href=True)['href']
 
                     article_date = self.parse_french_date(article.find("span", "article-date").renderContents())
 
-                    if article_date < self.oldest_article_date:
-                        print "too old"; continue
+                    if article_date < self.oldest_article_date: continue
 
                     authors = article.findAll('a',{'class':re.compile(r'\bjournalist\b')})
                     authors = [ self.tag_to_string(a) for a in authors ]
 
                     description = article.find('div', {'class': lambda c: c != 'taxonomy-teaser'}, recursive=False).findAll('p')
-
-                    print "fil ",title," by ",authors," : ",description
 
                     summary = {
                         'title': self.tag_to_string(title).strip(),
@@ -147,7 +141,6 @@ class Mediapart(BasicNewsRecipe):
             br['name'] = self.username
             br['pass'] = self.password
             br.submit()
-        print "LOGIN"
         return br
 
     # This is a workaround articles with scribd content that include
