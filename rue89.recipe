@@ -9,8 +9,10 @@ Rue89
 __author__ = '2010-2012, Louis Gesbert <meta at antislash dot info>'
 
 import re
+import json
 from calibre.ebooks.BeautifulSoup import Tag
 from calibre.web.feeds.news import BasicNewsRecipe
+from calibre.ptempfile import PersistentTemporaryFile
 
 class Rue89(BasicNewsRecipe):
     title = u'Rue89'
@@ -24,7 +26,7 @@ class Rue89(BasicNewsRecipe):
 
     # From http://www.rue89.com/les-flux-rss-de-rue89
     feeds = [
-        (u'La Une',    u'http://www.rue89.com/feed'),
+        (u'La Une',    u'http://api.rue89.nouvelobs.com/feed'),
         # Other feeds disabled, 'La Une' seems to include them all
         # (u'Rue69',     u'http://www.rue89.com/rue69/feed'),
         # (u'Eco',       u'http://www.rue89.com/rue89-eco/feed'),
@@ -38,41 +40,34 @@ class Rue89(BasicNewsRecipe):
         # (u'Societe',   u'http://www.rue89.com/societe/feed'),
     ]
 
-    # Follow redirection from feedsportal.com
-    def get_article_url(self,article):
-        return self.browser.open_novisit(article.link).geturl()
+    temp_files = []
+    articles_are_obfuscated = True
+    # Actually no, but they are in JSON, not HTML. While this should make our
+    # work easier, Calibre only understands HTML as input...
 
-    def print_version(self, url):
-        return url + '?imprimer=1'
+    def get_obfuscated_article(self, url):
+        nid = re.compile(r'^.*-(\d+)$').match(url).group(1)
+        url = 'http://api.rue89.nouvelobs.com/export/mobile2/node/'+nid+'/full'
+
+        raw_data = self.browser.open(url).read()
+        json_full = json.loads(raw_data)
+        json_contents = json_full['node']
+
+        if json_contents['type'] == 'zapnet':
+            return None
+
+        self.temp_files.append(PersistentTemporaryFile('_fa.html'))
+        self.temp_files[-1].write(
+            '<html><head><title>'+json_contents['title']+'</title></head>'+
+            '<body><h1>'+json_contents['title']+'</h1>'+
+            json_contents['body']+
+            '</body></html>'
+        )
+        self.temp_files[-1].close()
+
+        return self.temp_files[-1].name
 
     conversion_options = { 'smarten_punctuation' : True }
-
-    keep_only_tags = [
-        dict(name='div', attrs={'id':'content'}),
-    ]
-
-    remove_and_after = [
-        dict(name='div', attrs={'id':'plus_loin'}),
-    ]
-
-    remove_tags_after = [
-        dict(name='div', attrs={'class':re.compile(r'content')}),
-        dict(name='footer'),
-    ] + remove_and_after
-
-    remove_tags = [
-        dict(name='div', attrs={'id':'article_tools'}),
-        dict(name='div', attrs={'class':re.compile(r'tools')}),
-        dict(attrs={'class':re.compile(r'stats|sharing|share|twitter')}),
-    ] + remove_and_after
-
-    extra_css = "#content { padding: 0 0; }"
-
-    preprocess_regexps = [
-        # Without this, parsing of video articles returns strange results
-        (re.compile(r'<script.*?</script>', re.IGNORECASE|re.DOTALL), ''),
-        (re.compile(r'</?font.*?>', re.IGNORECASE|re.DOTALL), ''),
-    ]
 
     def preprocess_html(self, soup):
         # Remove whole article if it's a "zapnet" (video)
