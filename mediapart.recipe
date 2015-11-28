@@ -36,12 +36,12 @@ class Mediapart(BasicNewsRecipe):
     oldest_article_date = date.today() - timedelta(days=custom_oldest_article)
 
     feeds =  [
-        ('La Une', 'http://www.mediapart.fr/articles/feed'),
+        ('La Une', 'https://www.mediapart.fr/articles/feed'),
     ]
 
     def parse_feeds(self):
         feeds = super(Mediapart, self).parse_feeds()
-        feeds += feeds_from_index(self.my_parse_index(feeds))
+        #feeds += feeds_from_index(self.my_parse_index(feeds))
         return feeds
 
     def my_parse_index(self, la_une):
@@ -118,17 +118,17 @@ class Mediapart(BasicNewsRecipe):
         soup = BeautifulSoup(raw.decode('utf8', 'replace'))
 
         # Filter old articles
-        article_date = self.parse_french_date(self.tag_to_string(soup.find('span', 'article-date')))
+        article_date = self.parse_french_date(self.tag_to_string(soup.find('div', 'author')))
 
         if article_date < self.oldest_article_date:
-            return None
+           return None
 
-        tools = soup.find('div', {'class':'menu-tools'})
+        tools = soup.find('div', {'id':'menuOutilsTopEl'})
         link = tools.find('a', {'href': re.compile(r'\/print\/.*')})
         if link is None:
             print 'Error: print link not found'
             return None
-        return 'https://mediapart.fr/' + link['href']
+        return 'https://www.mediapart.fr' + link['href']
 
 
 # -- Handle login
@@ -136,10 +136,10 @@ class Mediapart(BasicNewsRecipe):
     def get_browser(self):
         br = BasicNewsRecipe.get_browser(self)
         if self.username is not None and self.password is not None:
-            br.open('https://www.mediapart.fr/user')
+            br.open('https://www.mediapart.fr/login')
             br.select_form(nr=1)
             br['name'] = self.username
-            br['pass'] = self.password
+            br['password'] = self.password
             br.submit()
         return br
 
