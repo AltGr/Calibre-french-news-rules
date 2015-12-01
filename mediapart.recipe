@@ -158,10 +158,14 @@ class Mediapart(BasicNewsRecipe):
              + '</body>')
     ]
 
-    # def preprocess_html(self, soup):
-    #     for title in soup.findAll('p', {'class':'titre_page'}):
-    #         title.name = 'h3'
-    #     for legend in soup.findAll('span', {'class':'legend'}):
-    #         legend.insert(0, Tag(soup, 'br', []))
-    #         legend.name = 'em'
-    #     return soup
+    def preprocess_html(self, soup):
+        mediapart_line = soup.body.find(text=re.compile(r"- Mediapart.fr"))
+        mediapart_line and mediapart_line.extract()
+        content = soup.body.find('div', {'class': None}, recursive=False)
+        lire_aussi = content.find('p', text=re.compile(r"\[\[lire_aussi\]\]"))
+        lire_aussi and lire_aussi.extract()
+        abstract = content.p
+        qu = Tag(soup,'blockquote')
+        content.insert(0,qu)
+        qu.insert(0,abstract)
+        return soup
