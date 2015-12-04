@@ -106,13 +106,14 @@ class Mediapart(BasicNewsRecipe):
     # non-locale specific date parse (strptime("%d %b %Y",s) would work with french locale)
     def parse_french_date(self, date_str):
         date_arr = date_str.lower().split()
-        months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet',
-                  'août', 'septembre', 'octobre', 'novembre', 'décembre']
-        def get_month(str):
-            r = re.compile(str)
-            for m in range(1,12):
-                if re.match(r,months[m-1]):
-                    return m
+        months = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin',
+                  'juillet', 'août', 'septembre', 'octobre', 'novembre',
+                  'décembre']
+        def get_month(s):
+            s = s.partition(".")[0]
+            for m in range(0,12):
+                if months[m].startswith(s):
+                    return m + 1
         return date(day=int(date_arr[0]),
                     year=int(date_arr[2]),
                     month=get_month(date_arr[1]))
