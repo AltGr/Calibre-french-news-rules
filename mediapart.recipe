@@ -140,9 +140,13 @@ class Mediapart(BasicNewsRecipe):
 
     def get_browser(self):
         br = BasicNewsRecipe.get_browser(self)
+        br.set_handle_gzip(True) # Medipart is gziped now
         if self.username is not None and self.password is not None:
             br.open('https://www.mediapart.fr/login')
-            br.select_form(nr=1)
+            # I prefer to use the form ID, and this long code is needed to make it work
+            br.select_form(predicate=lambda f: f.attrs.get('id', None) == 'logFormEl')
+            # If that doesn't work try this relative selector
+            # br.select_form(nr=1)
             br['name'] = self.username
             br['password'] = self.password
             br.submit()
