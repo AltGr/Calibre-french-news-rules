@@ -1,12 +1,12 @@
 # -*- mode:python -*-
 
 __license__   = 'GPL v3'
-__copyright__ = '2009, Mathieu Godlewski <mathieu at godlewski.fr>; 2010-2012, Louis Gesbert <meta at antislash dot info>'
+__copyright__ = '2009, Mathieu Godlewski <mathieu at godlewski.fr>; 2010-2015, Louis Gesbert <meta at antislash dot info>'
 '''
 Mediapart
 '''
 
-__author__ = '2009, Mathieu Godlewski <mathieu at godlewski.fr>; 2010-2012, Louis Gesbert <meta at antislash dot info>'
+__author__ = '2009, Mathieu Godlewski <mathieu at godlewski.fr>; 2010-2015, Louis Gesbert <meta at antislash dot info>'
 
 import re
 from calibre.ebooks.BeautifulSoup import BeautifulSoup, Tag
@@ -140,6 +140,7 @@ class Mediapart(BasicNewsRecipe):
 
     def get_browser(self):
         br = BasicNewsRecipe.get_browser(self)
+        br.set_handle_gzip(True)
         if self.username is not None and self.password is not None:
             br.open('https://www.mediapart.fr/login')
             br.select_form(nr=1)
