@@ -60,7 +60,7 @@ class Mediapart(BasicNewsRecipe):
 
             for article in soup.findAll('li', {'data-type': 'article'}):
                 try:
-                    title = article.find('h3', 'title', recursive=False)
+                    title = article.find('h1', 'title', recursive=False)
                     if title == None or title['class'] == 'title-specific': continue
 
                     article_type = article.find('a', {'href': re.compile(r'.*\/type-darticles\/.*')}).renderContents()
@@ -69,7 +69,7 @@ class Mediapart(BasicNewsRecipe):
                     for s in title('span'): s.replaceWith(s.renderContents() + "\n")
                     url = title.find('a', href=True)['href']
 
-                    article_date = self.parse_french_date(article.find('div', 'author').renderContents())
+                    article_date = self.parse_french_date(article.find('div', 'author').find('time').renderContents())
 
                     if article_date < self.oldest_article_date: continue
 
@@ -123,7 +123,7 @@ class Mediapart(BasicNewsRecipe):
         soup = BeautifulSoup(raw.decode('utf8', 'replace'))
 
         # Filter old articles
-        article_date = self.parse_french_date(soup.find('div', 'author').renderContents())
+        article_date = self.parse_french_date(soup.find('div', 'author').find('time').renderContents())
 
         if article_date < self.oldest_article_date:
            return None
@@ -143,7 +143,7 @@ class Mediapart(BasicNewsRecipe):
         br.set_handle_gzip(True)
         if self.username is not None and self.password is not None:
             br.open('https://www.mediapart.fr/login')
-            br.select_form(nr=1)
+            br.select_form(predicate=lambda f: f.attrs.get('id', None) == 'logFormEl')
             br['name'] = self.username
             br['password'] = self.password
             br.submit()
