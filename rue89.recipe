@@ -24,56 +24,15 @@ class Rue89(BasicNewsRecipe):
 
     use_embedded_content = False
 
-    # From http://www.rue89.com/les-flux-rss-de-rue89
     feeds = [
-        (u'La Une',    u'http://api.rue89.nouvelobs.com/feed'),
-        # Other feeds disabled, 'La Une' seems to include them all
-        # (u'Rue69',     u'http://www.rue89.com/rue69/feed'),
-        # (u'Eco',       u'http://www.rue89.com/rue89-eco/feed'),
-        # (u'Planète',   u'http://www.rue89.com/rue89-planete/feed'),
-        # (u'Sport',     u'http://www.rue89.com/rue89-sport/feed'),
-        # (u'Culture',   u'http://www.rue89.com/culture/feed'),
-        # (u'Hi-tech',   u'http://www.rue89.com/hi-tech/feed'),
-        # (u'Media',     u'http://www.rue89.com/medias/feed'),
-        # (u'Monde',     u'http://www.rue89.com/monde/feed'),
-        # (u'Politique', u'http://www.rue89.com/politique/feed'),
-        # (u'Societe',   u'http://www.rue89.com/societe/feed'),
+        (u'La Une', u'http://tempsreel.nouvelobs.com/rue89/rss.xml'),
     ]
-
-    temp_files = []
-    articles_are_obfuscated = True
-    # Actually no, but they are in JSON, not HTML. While this should make our
-    # work easier, Calibre only understands HTML as input...
-
-    def get_obfuscated_article(self, url):
-        nid = re.compile(r'^.*-(\d+)$').match(url).group(1)
-        url = 'http://api.rue89.nouvelobs.com/export/mobile2/node/'+nid+'/full'
-
-        raw_data = self.browser.open(url).read()
-        json_full = json.loads(raw_data)
-        json_contents = json_full['node']
-
-        if json_contents['type'] == 'zapnet':
-            return None
-
-        self.temp_files.append(PersistentTemporaryFile('_fa.html'))
-        self.temp_files[-1].write(
-            '<html><head><title>'+json_contents['title']+'</title></head>'+
-            '<body><h1>'+json_contents['title']+'</h1>'+
-            json_contents['body']+
-            '</body></html>'
-        )
-        self.temp_files[-1].close()
-
-        return self.temp_files[-1].name
 
     conversion_options = { 'smarten_punctuation' : True }
 
-    def preprocess_html(self, soup):
-        # Remove whole article if it's a "zapnet" (video)
-        if soup.find('h1', {'class':'zapnet_title'}):
-            return None
-        # Reduce h2 titles to h3
-        for title in soup.findAll('h2'):
-            title.name = 'h3'
-        return soup
+    keep_only_tags = [
+        dict(name='h1', attrs={'itemprop': 'headline'}),
+        dict(name='span', attrs={'itemprop': 'author'}),
+        dict(name='time', attrs={'class': 'date'}),
+        dict(name='div', attrs={'itemprop': 'articleBody'}),
+    ]
